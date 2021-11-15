@@ -2,10 +2,18 @@ K = 8
 MOD = [1, 0, 0, 0, 1, 1, 0, 1, 1]
 
 
+def _is_zero(poly):
+    # test if each coefficient is zero
+    return all([coeff == 0 for coeff in poly])
+
+
 def _degree(poly):
-    exps = range(len(poly) - 1, -1, -1)
-    degree = max([exp for exp, coeff in zip(exps, poly)
-                  if coeff == 1])
+    if _is_zero(poly):
+        degree = None
+    else:
+        exps = range(len(poly) - 1, -1, -1)
+        degree = max([exp for exp, coeff in zip(exps, poly)
+                      if coeff == 1])
     return degree
 
 
@@ -52,12 +60,12 @@ def _reduce(poly, mod):
         poly_degree = _degree(poly)
 
         # if we're fully reduced, break
-        if poly_degree < mod_degree:
+        if poly_degree is None or poly_degree < mod_degree:
             break
 
         # shift our mod to reduce out the highest monomial
         shift_amount = poly_degree - mod_degree
-        shift_mod = MOD + [0] * shift_amount
+        shift_mod = mod + [0] * shift_amount
 
         # pad out the mod to match poly's length
         shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
@@ -77,13 +85,16 @@ class QRFiniteField:
 
     def __str__(self):
         # get list of exponents, then monomials
-        exps = range(K - 1, -1, -1)
-        monos = [f'x^{exp}' if exp != 0 else '1'
-                 for coeff, exp in zip(self.coeffs, exps)
-                 if coeff == 1]
+        if _is_zero(self.coeffs):
+            poly = '0'
+        else:
+            exps = range(K - 1, -1, -1)
+            monos = [f'x^{exp}' if exp != 0 else '1'
+                     for coeff, exp in zip(self.coeffs, exps)
+                     if coeff == 1]
 
-        # join together with plusses
-        poly = ' + '.join(monos)
+            # join together with plusses
+            poly = ' + '.join(monos)
         return poly
 
     def __repr__(self):
@@ -118,7 +129,7 @@ class QRFiniteField:
         # iterate until we're done
         while True:
             q_cur, r_next = _reduce(r_last, r_cur)
-            if r_next == 0:
+            if _is_zero(r_next):
                 break
             else:
                 r_last, r_cur  = r_cur, r_next
@@ -132,4 +143,4 @@ if __name__ == '__main__':
     a = QRFiniteField([0, 1, 0, 1, 0, 0, 1, 1])
     b = QRFiniteField([1, 1, 0, 0, 1, 0, 1, 0])
 
-    print(a * b)
+    print(a.inv())
