@@ -16,7 +16,7 @@ def _add(poly_a, poly_b):
 
 def _multiply(poly_a, poly_b):
     # create a product with all zeros
-    prod = [0 for _ in range((len(a) - 1) + (len(b) - 1) + 1)]
+    prod = [0 for _ in range((len(poly_a) - 1) + (len(poly_b) - 1) + 1)]
 
     # perform raw multiplication
     exps = range(K-1, -1, -1)
@@ -37,29 +37,38 @@ def _multiply(poly_a, poly_b):
 
 
 def _reduce(poly, mod):
-        # get mod degree
-        mod_degree = _degree(mod)
+    # get mod degree
+    mod_degree = _degree(mod)
 
-        # remove leading zeroes from mod
-        mod = mod[-(mod_degree + 1):]
+    # remove leading zeroes from mod
+    mod = mod[-(mod_degree + 1):]
 
-        # long division to reduce
-        while True:
-            # get poly degree
-            poly_degree = _degree(poly)
+    # create quotient
+    quot = [0 for _ in range(len(poly))]
 
-            # if we're fully reduced, break
-            if poly_degree < mod_degree:
-                break
+    # long division to reduce
+    while True:
+        # get poly degree
+        poly_degree = _degree(poly)
 
-            # shift our mod to reduce out the highest monomial
-            shift_mod = MOD + [0] * (poly_degree - mod_degree)
-            shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
+        # if we're fully reduced, break
+        if poly_degree < mod_degree:
+            break
 
-            # subtract it out of the product
-            poly = _add(poly, shift_mod)
+        # shift our mod to reduce out the highest monomial
+        shift_amount = poly_degree - mod_degree
+        shift_mod = MOD + [0] * shift_amount
 
-        return poly
+        # pad out the mod to match poly's length
+        shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
+
+        # subtract it out of the product
+        poly = _add(poly, shift_mod)
+
+        # add corresponding value to quotient
+        quot[-shift_amount] = 1
+
+    return quot, poly
 
 
 class QRFiniteField:
@@ -87,26 +96,11 @@ class QRFiniteField:
         return QRFiniteField(coeffs)
 
     def __mul__(self, other):
-        # create a product with all zeros
-        prod = [0 for _ in range(2 * (K-1) + 1)]
-
-        # perform raw multiplication
-        exps = range(K-1, -1, -1)
-
-        # go through all self's terms
-        for exp, coeff in zip(exps, self.coeffs):
-            # if a term is nonzero
-            if coeff == 1:
-
-                # create a partial sum by shifting other's coeffs
-                part_sum = other.coeffs + exp * [0]
-                part_sum = (len(prod) - len(part_sum)) * [0] + part_sum
-
-                # add it into the product
-                prod = _add(prod, part_sum)
+        # do a raw multiply
+        prod = _multiply(self.coeffs, other.coeffs)
 
         # reduce the product
-        prod = _reduce(prod, MOD)
+        _, prod = _reduce(prod, MOD)
 
         # chop off the leading bits (now zero) and return
         prod = prod[-K:]
@@ -116,18 +110,22 @@ class QRFiniteField:
     def inv(self):
         # use extended euclidean method
         # set initial values
-        r_last, r_cur = MOD, self.coeffs
-        s_last, s_cur = 1, 0
+        r_last, r_cur = self.coeffs, MOD
+        s_last = [0 for _ in range(K)]
+        s_last[-1] = 1
+        s_cur = [0 for _ in range(K)]
 
         # iterate until we're done
-        while r_next != 0:
-            r_next = _reduce(r_last, r_cur)
+        while True:
+            q_cur, r_next = _reduce(r_last, r_cur)
             if r_next == 0:
                 break
             else:
                 r_last, r_cur  = r_cur, r_next
-                s_last, s_cur = s_cur, _reduce(s_last, s_cur)
+                s_last, s_cur = s_cur, _add(s_last, _multiply(q_cur, s_cur))
 
+        # the inverse is stored in s_cur
+        return QRFiniteField(s_cur)
 
 
 if __name__ == '__main__':
