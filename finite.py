@@ -1,29 +1,36 @@
+# we work over GL(2^K), with K = 8
 K = 8
+
+# the modulus we choose is x^8 + x^4 + x^3 + x + 1
 MOD = [1, 0, 0, 0, 1, 1, 0, 1, 1]
 
 
-def _trim(poly):
+# trim leading zeros from a polynomial (list of coefficents)
+def _trim(poly: list[int]):
     if _is_zero(poly):
         return []
 
     return poly[-(_degree(poly) + 1):]
 
 
-def _is_zero(poly):
-    # test if each coefficient is zero
+# test if a polynomial is zero
+def _is_zero(poly: list[int]):
     return all([coeff == 0 for coeff in poly])
 
 
-def _degree(poly):
+# get the degree of a polynomial 
+def _degree(poly: list[int]):
     if _is_zero(poly):
         return None
 
+    # get the highest-degree monomial with non-zero coefficient
     exps = range(len(poly) - 1, -1, -1)
     degree = max([exp for exp, coeff in zip(exps, poly)
                   if coeff == 1])
     return degree
 
 
+# add two binary polynomials (i.e. elts of Z/2Z[X])
 def _add(poly_a, poly_b):
     # zero extend the shorter
     len_diff = len(poly_a) - len(poly_b)
@@ -36,6 +43,7 @@ def _add(poly_a, poly_b):
     return [coeff_a ^ coeff_b for coeff_a, coeff_b in zip(poly_a, poly_b)]
 
 
+# multiply two binary polynomials
 def _multiply(poly_a, poly_b):
     # create a product with all zeros
     prod = [0 for _ in range((len(poly_a) - 1) + (len(poly_b) - 1) + 1)]
@@ -48,7 +56,7 @@ def _multiply(poly_a, poly_b):
         # if a term is nonzero
         if coeff_a == 1:
 
-            # create a partial sum by shifting other's coeffs
+            # create a partial sum by shifting other's coefficients
             part_sum = poly_b + exp * [0]
             part_sum = (len(prod) - len(part_sum)) * [0] + part_sum
 
@@ -77,14 +85,14 @@ def _reduce(poly, mod):
         if poly_degree is None or poly_degree < mod_degree:
             break
 
-        # shift our mod to reduce out the highest monomial
+        # shift mod to cancel out the highest monomial
         shift_amount = poly_degree - mod_degree
         shift_mod = mod + [0] * shift_amount
 
-        # pad out the mod to match poly's length
+        # left pad the mod to match poly's length
         shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
 
-        # subtract it out of the product
+        # subtract result out of poly
         poly = _add(poly, shift_mod)
 
         # add corresponding value to quotient
@@ -94,7 +102,13 @@ def _reduce(poly, mod):
 
 
 class QRFiniteField:
+    """
+    An element of the finite field GL(2^8).
+    """
     def __init__(self, coeffs):
+        """
+        Initializes the element of the finite field GL(2^8).
+        """
         self.coeffs = _trim(coeffs)
 
     def __str__(self):
