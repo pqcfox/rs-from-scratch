@@ -2,6 +2,13 @@ K = 8
 MOD = [1, 0, 0, 0, 1, 1, 0, 1, 1]
 
 
+def _trim(poly):
+    if _is_zero(poly):
+        return []
+
+    return poly[-(_degree(poly) + 1):]
+
+
 def _is_zero(poly):
     # test if each coefficient is zero
     return all([coeff == 0 for coeff in poly])
@@ -9,11 +16,11 @@ def _is_zero(poly):
 
 def _degree(poly):
     if _is_zero(poly):
-        degree = None
-    else:
-        exps = range(len(poly) - 1, -1, -1)
-        degree = max([exp for exp, coeff in zip(exps, poly)
-                      if coeff == 1])
+        return None
+
+    exps = range(len(poly) - 1, -1, -1)
+    degree = max([exp for exp, coeff in zip(exps, poly)
+                  if coeff == 1])
     return degree
 
 
@@ -56,7 +63,7 @@ def _reduce(poly, mod):
     mod_degree = _degree(mod)
 
     # remove leading zeroes from mod
-    mod = mod[-(mod_degree + 1):]
+    mod = _trim(mod)
 
     # create quotient
     quot = [0 for _ in range(len(poly))]
@@ -65,8 +72,6 @@ def _reduce(poly, mod):
     while True:
         # get poly degree
         poly_degree = _degree(poly)
-
-        print(poly)
 
         # if we're fully reduced, break
         if poly_degree is None or poly_degree < mod_degree:
@@ -79,10 +84,6 @@ def _reduce(poly, mod):
         # pad out the mod to match poly's length
         shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
 
-        print(shift_mod)
-        print(shift_amount)
-        print('...')
-
         # subtract it out of the product
         poly = _add(poly, shift_mod)
 
@@ -94,7 +95,7 @@ def _reduce(poly, mod):
 
 class QRFiniteField:
     def __init__(self, coeffs):
-        self.coeffs = coeffs
+        self.coeffs = _trim(coeffs)
 
     def __str__(self):
         # get list of exponents, then monomials
@@ -135,21 +136,13 @@ class QRFiniteField:
         # use extended euclidean method
         # set initial values
         r_last, r_cur = self.coeffs, MOD
-        s_last = [0 for _ in range(K)]
-        s_last[-1] = 1
-        s_cur = [0 for _ in range(K)]
+        s_last = [1]
+        s_cur = []  # the zero polynomial
 
         # iterate until we're done
         while True:
             q_cur, r_next = _reduce(r_last, r_cur)
             s_next = _add(s_last, _multiply(q_cur, s_cur))
-
-            print(r_last, r_cur, r_next)
-            print(s_last, s_cur, s_next)
-            print(q_cur)
-            print('debug')
-            print(_add(s_last, _multiply(q_cur, s_cur)))
-            print('-------')
 
             if _is_zero(r_next):
                 break
