@@ -18,6 +18,13 @@ def _degree(poly):
 
 
 def _add(poly_a, poly_b):
+    # zero extend the shorter
+    len_diff = len(poly_a) - len(poly_b)
+    if len_diff > 0:
+        poly_b = [0] * len_diff + poly_b
+    elif len_diff < 0:
+        poly_a = [0] * (-len_diff) + poly_a
+
     # just xor each element
     return [coeff_a ^ coeff_b for coeff_a, coeff_b in zip(poly_a, poly_b)]
 
@@ -27,7 +34,7 @@ def _multiply(poly_a, poly_b):
     prod = [0 for _ in range((len(poly_a) - 1) + (len(poly_b) - 1) + 1)]
 
     # perform raw multiplication
-    exps = range(K-1, -1, -1)
+    exps = range(len(poly_a)-1, -1, -1)
 
     # go through all self's terms
     for exp, coeff_a in zip(exps, poly_a):
@@ -59,6 +66,8 @@ def _reduce(poly, mod):
         # get poly degree
         poly_degree = _degree(poly)
 
+        print(poly)
+
         # if we're fully reduced, break
         if poly_degree is None or poly_degree < mod_degree:
             break
@@ -70,11 +79,15 @@ def _reduce(poly, mod):
         # pad out the mod to match poly's length
         shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
 
+        print(shift_mod)
+        print(shift_amount)
+        print('...')
+
         # subtract it out of the product
         poly = _add(poly, shift_mod)
 
         # add corresponding value to quotient
-        quot[-shift_amount] = 1
+        quot[-(shift_amount + 1)] = 1
 
     return quot, poly
 
@@ -129,11 +142,20 @@ class QRFiniteField:
         # iterate until we're done
         while True:
             q_cur, r_next = _reduce(r_last, r_cur)
+            s_next = _add(s_last, _multiply(q_cur, s_cur))
+
+            print(r_last, r_cur, r_next)
+            print(s_last, s_cur, s_next)
+            print(q_cur)
+            print('debug')
+            print(_add(s_last, _multiply(q_cur, s_cur)))
+            print('-------')
+
             if _is_zero(r_next):
                 break
             else:
                 r_last, r_cur  = r_cur, r_next
-                s_last, s_cur = s_cur, _add(s_last, _multiply(q_cur, s_cur))
+                s_last, s_cur = s_cur, s_next
 
         # the inverse is stored in s_cur
         return QRFiniteField(s_cur)
@@ -141,6 +163,5 @@ class QRFiniteField:
 
 if __name__ == '__main__':
     a = QRFiniteField([0, 1, 0, 1, 0, 0, 1, 1])
-    b = QRFiniteField([1, 1, 0, 0, 1, 0, 1, 0])
-
+    # b = QRFiniteField([1, 1, 0, 0, 1, 0, 1, 0])
     print(a.inv())
