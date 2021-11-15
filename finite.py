@@ -102,7 +102,7 @@ class QRFiniteField:
         if _is_zero(self.coeffs):
             poly = '0'
         else:
-            exps = range(K - 1, -1, -1)
+            exps = range(len(self.coeffs) - 1, -1, -1)
             monos = [f'x^{exp}' if exp != 0 else '1'
                      for coeff, exp in zip(self.coeffs, exps)
                      if coeff == 1]
@@ -129,6 +129,7 @@ class QRFiniteField:
 
         # chop off the leading bits (now zero) and return
         prod = prod[-K:]
+
         return QRFiniteField(prod)
 
 
@@ -156,4 +157,4 @@ class QRFiniteField:
 
 if __name__ == '__main__':
     a = QRFiniteField([0, 1, 0, 1, 0, 0, 1, 1])
-    print(a * a.inv())
+    b = QRFiniteField([1, 1, 0, 0, 1, 0, 1, 0])
