@@ -158,3 +158,4 @@ class QRFiniteField:
 if __name__ == '__main__':
     a = QRFiniteField([0, 1, 0, 1, 0, 0, 1, 1])
     b = QRFiniteField([1, 1, 0, 0, 1, 0, 1, 0])
+    print(b.inv() * b)
