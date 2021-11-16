@@ -88,9 +88,6 @@ def _reduce(poly, mod):
         shift_amount = poly_degree - mod_degree
         shift_mod = mod + [0] * shift_amount
 
-        # left pad the mod to match poly's length
-        shift_mod = (len(poly) - len(shift_mod)) * [0] + shift_mod
-
         # subtract result out of poly
         poly = _add(poly, shift_mod)
 
