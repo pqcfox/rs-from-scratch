@@ -1,7 +1,7 @@
-# K is the exponent in our field GL(2^K)
+# K is the exponent in our field GF(2^K)
 K = 8
 
-# MOD is the coefficients of the polynomial modulus we choose for GL(2^K),
+# MOD is the coefficients of the polynomial modulus we choose for GF(2^K),
 # which here is x^8 + x^4 + x^3 + x + 1
 MOD = [1, 0, 0, 0, 1, 1, 0, 1, 1]
 
@@ -65,6 +65,7 @@ def _multiply(poly_a, poly_b):
     return prod
 
 
+# divide one polynomial by another
 def _reduce(poly, mod):
     # get mod degree
     mod_degree = _degree(mod)
@@ -99,13 +100,13 @@ def _reduce(poly, mod):
 
 class QRFiniteField:
     """
-    An element of the finite field GL(2^8).
+    An element of the finite field GF(2^8).
 
     Attributes
     ----------
     coeffs : list[int]
         A list of binary coefficients, starting with highest-degree
-        monomial, of the element of GL(2^8).
+        monomial, of the element of GF(2^8).
     """
 
     def __init__(self, coeffs):
@@ -147,7 +148,7 @@ class QRFiniteField:
 
     def inv(self):
         """
-        Compute the inverse of this element in GL(2^8).
+        Compute the inverse of this element in GF(2^8).
 
         Returns
         -------
