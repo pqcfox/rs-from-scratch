@@ -1,7 +1,4 @@
-# K is the exponent in our field GF(2^K)
-K = 8
-
-# MOD is the coefficients of the polynomial modulus we choose for GF(2^K),
+# MOD is the coefficients of the polynomial modulus we choose for GF(2^8),
 # which here is x^8 + x^4 + x^3 + x + 1
 MOD = [1, 0, 0, 0, 1, 1, 0, 1, 1]
 
@@ -128,7 +125,7 @@ class QRFiniteField:
 
     def __repr__(self):
         # add some context for repr
-        return f'<value {self} in field GF(2^{K})>'
+        return f'<value {self} in field GF(2^8)>'
 
     def __add__(self, other):
         # adding is just adding binary polynomials
